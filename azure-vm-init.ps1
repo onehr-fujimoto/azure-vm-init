@@ -9,6 +9,19 @@ param (
 # ファイアウォール無効
 Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
 
+# OSディスク拡張
+# ドライブレターを指定（例：Cドライブ）
+$driveLetter = 'C'
+# 拡張可能な最大サイズを取得
+$supportedSize = Get-PartitionSupportedSize -DriveLetter $driveLetter
+# パーティションを最大サイズへ拡張
+Resize-Partition -DriveLetter $driveLetter -Size $supportedSize.SizeMax
+
+# ディスク初期化
+Initialize-Disk -Number 1 -PartitionStyle GPT
+New-Partition -DiskNumber 1 -UseMaximumSize -DriveLetter D
+Format-Volume -DriveLetter D -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false
+
 # ローカルユーザー作成
 & .\make-local-user.ps1 $hradminpass $infrapass
 

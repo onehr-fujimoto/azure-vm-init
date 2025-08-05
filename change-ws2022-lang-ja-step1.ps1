@@ -81,17 +81,5 @@ Add-WindowsCapability -Online -Name 'Language.TextToSpeech~~~ja-JP~0.0.1.0' -Ver
 # Set the time zone for the current computer.
 Set-TimeZone -Id 'Tokyo Standard Time' -Verbose
 
-# カレントディレクトリの取得
-$curdir = Get-Location
-
-# 再起動後にStep2スクリプトを実行するタスクスケジューラーを登録
-$taskName = 'Change WS2022 Language to Japanese - Step2'
-$taskAction = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument '-File '+ $curdir + '\change-ws2022-lang-ja-step2.ps1'
-$taskTrigger = New-ScheduledTaskTrigger -AtStartup
-$taskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
-$taskPrincipal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest 
-Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -Settings $taskSettings -Principal $taskPrincipal
-
-
 # Restart the system to take effect the language pack installation.
-# Restart-Computer
+Restart-Computer
