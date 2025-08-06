@@ -17,6 +17,12 @@ $supportedSize = Get-PartitionSupportedSize -DriveLetter $driveLetter
 # パーティションを最大サイズへ拡張
 Resize-Partition -DriveLetter $driveLetter -Size $supportedSize.SizeMax
 
+# DドライブがDVDの可能性があるため、Dドライブ割り当てを削除
+# 1. CD/DVDドライブ（D:）のパーティション情報を取得
+$partition = Get-Volume -DriveLetter D | Get-Partition
+# 2. ドライブレター D: を削除
+Remove-PartitionAccessPath -Partition $partition -AccessPath "D:\"
+
 # ディスク初期化
 Initialize-Disk -Number 1 -PartitionStyle GPT
 New-Partition -DiskNumber 1 -UseMaximumSize -DriveLetter D
