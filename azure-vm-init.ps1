@@ -18,21 +18,38 @@ $supportedSize = Get-PartitionSupportedSize -DriveLetter $driveLetter
 # パーティションを最大サイズへ拡張
 Resize-Partition -DriveLetter $driveLetter -Size $supportedSize.SizeMax
 
-# DドライブがDVDの可能性があるため、Dドライブ割り当てを削除
-# 1. CD/DVDドライブ（D:）のパーティション情報を取得
-$partition = Get-Volume -DriveLetter D | Get-Partition
-# 2. ドライブレター D: を削除
-Remove-PartitionAccessPath -Partition $partition -AccessPath "D:\"
+if ($withtempdisk){
+    $disknum = 2
+    $driveLetter = "E"
+}else{
+    $disknum=1
+    $driveLetter = "D"
+}
 
-if ($withtempdisk){$disknum = 2}else{$disknum=1}
+# ドライブレター を削除
+$tempfile =  $env:temp + "\diskpart-"+(Get-Date).ToFileTime()+".txt"
+
+@"
+select volume $DriveLetter
+remove
+exit
+"@ | set-content $tempfile
+diskpart /s $tempfile
 
 # ディスク初期化
 Initialize-Disk -Number $disknum -PartitionStyle GPT
-New-Partition -DiskNumber $disknum -UseMaximumSize -DriveLetter D
-Format-Volume -DriveLetter D -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false
+New-Partition -DiskNumber $disknum -UseMaximumSize -DriveLetter $driveLetter
+Format-Volume -DriveLetter $driveLetter -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false
 
 # ローカルユーザー作成
 & .\make-local-user.ps1 $hradminpass $infrapass
+
+# 再起動後に実行するスクリプトを指定
+$scriptPath = (get-childitem change-ws2022-lang-ja-step2.ps1).FullName
+$cmd = "powershell.exe -ExecutionPolicy Bypass -File `"$scriptPath`""
+
+$regPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce'
+New-ItemProperty -Path $regPath -Name 'RunMyScriptOnce' -Value $cmd -PropertyType String -Force
 
 # 日本語化 Step1
 # スクリプトの中で再起動される。
