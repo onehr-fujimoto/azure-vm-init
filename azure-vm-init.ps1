@@ -4,7 +4,7 @@
 param (
     [string]$hradminpass,
     [string]$infrapass,
-    [bool]$withtempdisk = $false
+    [int]$withtempdisk = 0
 )
 
 # ファイアウォール無効
