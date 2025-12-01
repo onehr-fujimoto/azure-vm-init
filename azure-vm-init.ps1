@@ -3,7 +3,8 @@
 # パラメータ
 param (
     [string]$hradminpass,
-    [string]$infrapass
+    [string]$infrapass,
+    [bool]$withtempdisk = $false
 )
 
 # ファイアウォール無効
@@ -23,9 +24,11 @@ $partition = Get-Volume -DriveLetter D | Get-Partition
 # 2. ドライブレター D: を削除
 Remove-PartitionAccessPath -Partition $partition -AccessPath "D:\"
 
+if ($withtempdisk){$disknum = 2}else{$disknum=1}
+
 # ディスク初期化
-Initialize-Disk -Number 1 -PartitionStyle GPT
-New-Partition -DiskNumber 1 -UseMaximumSize -DriveLetter D
+Initialize-Disk -Number $disknum -PartitionStyle GPT
+New-Partition -DiskNumber $disknum -UseMaximumSize -DriveLetter D
 Format-Volume -DriveLetter D -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false
 
 # ローカルユーザー作成
